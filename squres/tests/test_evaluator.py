@@ -3,7 +3,11 @@ Tests for risk evaluator.
 """
 
 import unittest
-from app.analysis.evaluator import RiskEvaluator
+
+try:
+    from app.analysis.evaluator import RiskEvaluator
+except ModuleNotFoundError:
+    from squres.app.analysis.evaluator import RiskEvaluator
 
 
 class TestRiskEvaluator(unittest.TestCase):
@@ -94,6 +98,31 @@ class TestRiskEvaluator(unittest.TestCase):
         
         self.assertGreater(len(result['defect_prone_modules']), 0)
         self.assertEqual(result['defect_prone_modules'][0]['risk_level'], 'High')
+
+    def test_large_file_is_flagged_by_loc_threshold(self):
+        """Test very large files (LOC > 500) are explicitly flagged."""
+        analysis = {
+            'files': {
+                'large_module.py': {
+                    'cyclomatic_complexity': 2,
+                    'average_complexity': 2,
+                    'maintainability_index': 90,
+                    'size_lines': 650,
+                    'functions': [
+                        {'name': 'f', 'complexity': 2}
+                    ],
+                    'errors': []
+                }
+            },
+            'summary': {}
+        }
+
+        evaluator = RiskEvaluator(analysis)
+        result = evaluator.evaluate()
+
+        file_risk = result['file_risks']['large_module.py']
+        self.assertIn(file_risk['risk_level'], ['Medium', 'High'])
+        self.assertTrue(any('very large' in reason.lower() for reason in file_risk['reasons']))
 
 
 if __name__ == '__main__':

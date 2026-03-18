@@ -11,7 +11,7 @@ def create_app(config=None):
     Application factory for creating Flask app instances.
     
     Args:
-        config (dict): Configuration dictionary for the Flask app
+        config: Configuration dictionary, object, or class for the Flask app
         
     Returns:
         Flask: Configured Flask application instance
@@ -24,7 +24,10 @@ def create_app(config=None):
     
     # Override with custom config if provided
     if config:
-        app.config.update(config)
+        if isinstance(config, dict):
+            app.config.update(config)
+        else:
+            app.config.from_object(config)
     
     # Register blueprints
     from app.routes import api_bp, web_bp

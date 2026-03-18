@@ -12,27 +12,17 @@ from datetime import datetime
 import traceback
 import sys
 
-from flask import Blueprint, request, jsonify, render_template, send_file
+from flask import Blueprint, request, jsonify, render_template, send_file, current_app
 from werkzeug.utils import secure_filename
 
 from app.analysis.analyzer import StaticCodeAnalyzer
 from app.analysis.evaluator import RiskEvaluator
 from app.analysis.report_generator import ReportGenerator
-from app.utils.validators import validate_upload, validate_file_size
+from app.utils.validators import validate_upload, validate_file_size, validate_zip_contents
 
 # Create blueprints
 api_bp = Blueprint('api', __name__, url_prefix='/api')
 web_bp = Blueprint('web', __name__)
-
-# Allowed file extensions
-ALLOWED_EXTENSIONS = {'zip'}
-MAX_FILE_SIZE = 500 * 1024 * 1024  # 500 MB
-
-
-def allowed_file(filename):
-    """Check if file extension is allowed."""
-    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
-
 
 @web_bp.route('/')
 def index():
@@ -54,23 +44,11 @@ def upload_file():
             return jsonify({'error': 'No file provided'}), 400
         
         file = request.files['file']
-        
-        if file.filename == '':
-            return jsonify({'error': 'No file selected'}), 400
-        
-        if not allowed_file(file.filename):
-            return jsonify({'error': 'Only .zip files are allowed'}), 400
-        
-        # Validate file size
-        file.seek(0, os.SEEK_END)
-        file_size = file.tell()
-        file.seek(0)
-        
-        if file_size > MAX_FILE_SIZE:
-            return jsonify({'error': f'File too large. Maximum size is {MAX_FILE_SIZE / (1024*1024):.0f} MB'}), 400
-        
-        if file_size == 0:
-            return jsonify({'error': 'File is empty'}), 400
+
+        max_file_size = current_app.config.get('MAX_CONTENT_LENGTH', 500 * 1024 * 1024)
+        is_valid_upload, upload_error = validate_upload(file, max_file_size)
+        if not is_valid_upload:
+            return jsonify({'error': upload_error}), 400
         
         # Create temporary directory for extraction
         temp_dir = tempfile.mkdtemp(prefix='squres_')
@@ -81,19 +59,20 @@ def upload_file():
             zip_path = os.path.join(temp_dir, filename)
             file.save(zip_path)
             
-            # Verify it's a valid zip file
-            if not zipfile.is_zipfile(zip_path):
-                return jsonify({'error': 'Invalid zip file format'}), 400
+            # Validate saved file size and zip contents
+            is_valid_size, size_error = validate_file_size(zip_path, max_file_size)
+            if not is_valid_size:
+                return jsonify({'error': size_error}), 400
+
+            is_valid_zip, zip_error = validate_zip_contents(zip_path)
+            if not is_valid_zip:
+                return jsonify({'error': zip_error}), 400
             
             # Extract zip file
             extract_dir = os.path.join(temp_dir, 'extracted')
             os.makedirs(extract_dir, exist_ok=True)
             
             with zipfile.ZipFile(zip_path, 'r') as zip_ref:
-                # Validate zip contents for path traversal
-                for member in zip_ref.namelist():
-                    if member.startswith('/') or '..' in member:
-                        return jsonify({'error': 'Zip file contains invalid paths'}), 400
                 zip_ref.extractall(extract_dir)
             
             # Perform static analysis

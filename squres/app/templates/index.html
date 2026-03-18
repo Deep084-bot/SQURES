@@ -229,6 +229,36 @@
             border-radius: 5px;
             border-left: 4px solid #667eea;
         }
+
+        .summary-card.highlight {
+            border-left-color: #2e7d32;
+            background: #f1fff3;
+        }
+
+        .summary-card.highlight h4 {
+            color: #2e7d32;
+        }
+
+        .summary-card .subtext {
+            margin-top: 6px;
+            color: #666;
+            font-size: 0.85em;
+            font-weight: 500;
+        }
+
+        .mi-legend {
+            margin: 15px 20px 0;
+            padding: 12px 14px;
+            border-radius: 6px;
+            background: #f8f8ff;
+            border: 1px solid #dfe3ff;
+            color: #444;
+            font-size: 0.9em;
+        }
+
+        .mi-legend strong {
+            color: #333;
+        }
         
         .summary-card h4 {
             color: #667eea;
@@ -545,6 +575,8 @@
     </div>
     
     <script>
+        const MAX_FILE_SIZE_BYTES = 500 * 1024 * 1024;
+
         const uploadForm = document.getElementById('uploadForm');
         const fileInput = document.getElementById('fileInput');
         const fileNameDisplay = document.getElementById('fileName');
@@ -556,12 +588,39 @@
         const successMsg = document.getElementById('successMsg');
         
         let analysisData = null;
+
+        function formatFileSize(sizeInBytes) {
+            const mb = sizeInBytes / (1024 * 1024);
+            return `${mb.toFixed(2)} MB`;
+        }
+
+        function validateSelectedFile(file) {
+            if (!file) {
+                return false;
+            }
+
+            if (file.size > MAX_FILE_SIZE_BYTES) {
+                showError(
+                    `Selected file is ${formatFileSize(file.size)}. Maximum allowed size is 500 MB.`
+                );
+                fileInput.value = '';
+                fileNameDisplay.textContent = '';
+                fileInput.parentElement.classList.remove('active');
+                return false;
+            }
+
+            return true;
+        }
         
         // File input handling
         fileInput.addEventListener('change', function() {
             if (this.files.length > 0) {
+                if (!validateSelectedFile(this.files[0])) {
+                    return;
+                }
                 fileNameDisplay.textContent = this.files[0].name;
                 fileInput.parentElement.classList.add('active');
+                hideMessages();
             }
         });
         
@@ -581,9 +640,13 @@
             fileInput.parentElement.classList.remove('active');
             const files = e.dataTransfer.files;
             if (files.length > 0 && files[0].name.endsWith('.zip')) {
+                if (!validateSelectedFile(files[0])) {
+                    return;
+                }
                 fileInput.files = files;
                 fileNameDisplay.textContent = files[0].name;
                 fileInput.parentElement.classList.add('active');
+                hideMessages();
             } else {
                 showError('Please drop a .zip file');
             }
@@ -604,6 +667,10 @@
             
             if (fileInput.files.length === 0) {
                 showError('Please select a file');
+                return;
+            }
+
+            if (!validateSelectedFile(fileInput.files[0])) {
                 return;
             }
             
@@ -662,9 +729,10 @@
             // Display summary
             const summaryGrid = document.getElementById('summaryGrid');
             summaryGrid.innerHTML = `
-                <div class="summary-card">
-                    <h4>Files Analyzed</h4>
+                <div class="summary-card highlight">
+                    <h4>Total Files Scanned</h4>
                     <div class="value">${report.project_summary.analyzed_files}</div>
+                    <div class="subtext">Python files analyzed in this run</div>
                 </div>
                 <div class="summary-card">
                     <h4>Lines of Code</h4>
@@ -677,12 +745,24 @@
                 <div class="summary-card">
                     <h4>Avg Maintainability</h4>
                     <div class="value">${report.project_summary.average_maintainability_index.toFixed(2)}</div>
+                    <div class="subtext">MI: &gt;85 Good, 65-85 Moderate, &lt;65 Poor</div>
                 </div>
                 <div class="summary-card">
                     <h4>Defect-Prone</h4>
                     <div class="value">${report.project_summary.defect_prone_count}</div>
                 </div>
             `;
+
+            const existingLegend = document.getElementById('miLegend');
+            if (existingLegend) {
+                existingLegend.remove();
+            }
+            summaryGrid.insertAdjacentHTML('afterend', `
+                <div class="mi-legend" id="miLegend">
+                    <strong>Maintainability Index Guide:</strong>
+                    MI &gt; 85 = Good, 65-85 = Moderate, MI &lt; 65 = Poor
+                </div>
+            `);
             
             // Display file metrics
             const fileMetricsBody = document.getElementById('fileMetricsBody');

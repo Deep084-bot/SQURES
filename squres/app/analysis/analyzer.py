@@ -73,6 +73,8 @@ class StaticCodeAnalyzer:
             'path': file_path,
             'relative_path': os.path.relpath(file_path, self.source_dir),
             'size_lines': 0,
+            'ast_node_count': 0,
+            'class_count': 0,
             'cyclomatic_complexity': 0,
             'average_complexity': 0,
             'maintainability_index': 0,
@@ -86,6 +88,16 @@ class StaticCodeAnalyzer:
             
             # Count lines
             result['size_lines'] = len(source_code.splitlines())
+
+            # Parse AST for structural metrics
+            try:
+                syntax_tree = ast.parse(source_code)
+                result['ast_node_count'] = sum(1 for _ in ast.walk(syntax_tree))
+                result['class_count'] = sum(
+                    1 for node in ast.walk(syntax_tree) if isinstance(node, ast.ClassDef)
+                )
+            except Exception as e:
+                result['errors'].append(f"AST parsing failed: {str(e)}")
             
             # Calculate cyclomatic complexity
             try:

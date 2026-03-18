@@ -16,6 +16,8 @@ class RiskEvaluator:
     
     MI_LOW = 65
     MI_MEDIUM = 85
+
+    LOC_HIGH = 500
     
     # Number of high-risk functions to flag a file as defect-prone
     HIGH_RISK_FUNCTION_THRESHOLD = 2
@@ -107,6 +109,15 @@ class RiskEvaluator:
                 f"({file_analysis['maintainability_index']:.2f})"
             )
             max_risk_score = max(max_risk_score, risk_scores[mi_risk])
+
+        # Flag very large files
+        file_loc = file_analysis.get('size_lines', 0)
+        if file_loc > self.LOC_HIGH:
+            reasons.append(
+                f"File is very large ({file_loc} LOC, threshold > {self.LOC_HIGH})"
+            )
+            # Large files are harder to review/maintain; at least medium risk.
+            max_risk_score = max(max_risk_score, risk_scores['Medium'])
         
         # Check for high-complexity functions
         high_complexity_functions = [
