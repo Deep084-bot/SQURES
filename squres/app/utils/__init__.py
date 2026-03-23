@@ -1,1 +1,1 @@
-"""Utility modules for SQURES application."""
+"""Utility modules for SQARES application."""

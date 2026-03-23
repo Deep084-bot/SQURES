@@ -1,5 +1,5 @@
 """
-SQURES - Software Quality and Reliability Evaluation System
+SQARES - Software Quality Analysis and Realiability Evaluation System
 Flask application factory
 """
 

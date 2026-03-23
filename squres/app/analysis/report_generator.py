@@ -188,7 +188,7 @@ class ReportGenerator:
         
         lines = []
         lines.append("=" * 80)
-        lines.append("SQURES - Software Quality and Reliability Evaluation System")
+        lines.append("SQARES - Software Quality Analysis and Realiability Evaluation System")
         lines.append("Analysis Report")
         lines.append("=" * 80)
         lines.append("")
@@ -329,7 +329,7 @@ class ReportGenerator:
         content = []
         
         # Title
-        content.append(Paragraph("SQURES - Code Analysis Report", title_style))
+        content.append(Paragraph("SQARES - Code Analysis Report", title_style))
         content.append(Spacer(1, 0.2*inch))
         
         # Summary Section

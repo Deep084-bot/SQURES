@@ -104,8 +104,12 @@ class RiskEvaluator:
             file_analysis['maintainability_index']
         )
         if mi_risk != 'Low':
+            maintainability_label = {
+                'High': 'low',
+                'Medium': 'moderate'
+            }.get(mi_risk, mi_risk.lower())
             reasons.append(
-                f"Maintainability Index is {mi_risk.lower()} "
+                f"Maintainability Index is {maintainability_label} "
                 f"({file_analysis['maintainability_index']:.2f})"
             )
             max_risk_score = max(max_risk_score, risk_scores[mi_risk])

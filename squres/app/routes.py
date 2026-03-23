@@ -41,7 +41,7 @@ def upload_file():
     try:
         # Validate request
         if 'file' not in request.files:
-            return jsonify({'error': 'No file provided'}), 400
+            return jsonify({'error': 'No files are uploaded. Please upload a ZIP file.'}), 400
         
         file = request.files['file']
 
@@ -68,19 +68,38 @@ def upload_file():
             if not is_valid_zip:
                 return jsonify({'error': zip_error}), 400
             
-            # Extract zip file
+            # Extract zip file and gather archive composition details.
             extract_dir = os.path.join(temp_dir, 'extracted')
             os.makedirs(extract_dir, exist_ok=True)
+            archive_file_count = 0
+            archive_python_file_count = 0
             
             with zipfile.ZipFile(zip_path, 'r') as zip_ref:
+                for info in zip_ref.infolist():
+                    if info.is_dir():
+                        continue
+                    archive_file_count += 1
+                    if info.filename.lower().endswith('.py'):
+                        archive_python_file_count += 1
                 zip_ref.extractall(extract_dir)
             
             # Perform static analysis
             analyzer = StaticCodeAnalyzer(extract_dir)
             analysis_results = analyzer.analyze()
+
+            analyzed_python_files = analysis_results.get('summary', {}).get('analyzed_files', 0)
+            skipped_non_python_files = max(archive_file_count - archive_python_file_count, 0)
             
             if not analysis_results['python_files']:
-                return jsonify({'error': 'No Python files found in the uploaded archive'}), 400
+                return jsonify({
+                    'error': 'No Python files found in the uploaded archive. Only .py files are analyzed.',
+                    'upload_summary': {
+                        'total_files_in_archive': archive_file_count,
+                        'python_files_detected': archive_python_file_count,
+                        'python_files_analyzed': analyzed_python_files,
+                        'non_python_files_skipped': skipped_non_python_files
+                    }
+                }), 400
             
             # Evaluate risks
             evaluator = RiskEvaluator(analysis_results)
@@ -97,6 +116,12 @@ def upload_file():
                 'analysis': {
                     'summary': analysis_results['summary'],
                     'files': analysis_results['files'],
+                    'upload_summary': {
+                        'total_files_in_archive': archive_file_count,
+                        'python_files_detected': archive_python_file_count,
+                        'python_files_analyzed': analyzed_python_files,
+                        'non_python_files_skipped': skipped_non_python_files
+                    },
                     'risk_assessment': risk_assessment,
                     'report': report
                 }
@@ -153,17 +178,17 @@ def download_report():
         
         if report_format == 'json':
             content = json.dumps(report_gen.generate_report(), indent=2).encode('utf-8')
-            filename = f"squres_report_{timestamp}.json"
+            filename = f"sqares_report_{timestamp}.json"
             mimetype = 'application/json'
             tmp_suffix = '.json'
         elif report_format == 'pdf':
             content = report_gen.generate_pdf_report()
-            filename = f"squres_report_{timestamp}.pdf"
+            filename = f"sqares_report_{timestamp}.pdf"
             mimetype = 'application/pdf'
             tmp_suffix = '.pdf'
         else:  # txt
             content = report_gen.generate_text_report().encode('utf-8')
-            filename = f"squres_report_{timestamp}.txt"
+            filename = f"sqares_report_{timestamp}.txt"
             mimetype = 'text/plain'
             tmp_suffix = '.txt'
         
