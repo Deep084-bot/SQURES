@@ -134,3 +134,4 @@ Thumbs.db
 /tmp/
 *.zip
 *.tar.gz
+.DS_Store
