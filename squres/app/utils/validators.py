@@ -81,7 +81,6 @@ def validate_zip_contents(zip_path):
     try:
         with zipfile.ZipFile(zip_path, 'r') as zip_ref:
             for member in zip_ref.namelist():
-                # Check for path traversal attempts
                 if member.startswith('/') or '..' in member:
                     return False, "Zip file contains invalid paths (path traversal detected)"
     except Exception as e:

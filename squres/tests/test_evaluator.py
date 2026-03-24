@@ -11,17 +11,14 @@ except ModuleNotFoundError:
 
 
 class TestRiskEvaluator(unittest.TestCase):
-    """Test cases for RiskEvaluator."""
     
     def setUp(self):
-        """Set up test fixtures."""
         self.base_analysis = {
             'files': {},
             'summary': {}
         }
     
     def test_complexity_categorization(self):
-        """Test cyclomatic complexity categorization."""
         evaluator = RiskEvaluator(self.base_analysis)
         
         self.assertEqual(evaluator.categorize_complexity_risk(5), 'Low')
@@ -29,7 +26,6 @@ class TestRiskEvaluator(unittest.TestCase):
         self.assertEqual(evaluator.categorize_complexity_risk(12), 'High')
     
     def test_maintainability_categorization(self):
-        """Test maintainability index categorization."""
         evaluator = RiskEvaluator(self.base_analysis)
         
         self.assertEqual(evaluator.categorize_maintainability_risk(90), 'Low')
@@ -37,7 +33,6 @@ class TestRiskEvaluator(unittest.TestCase):
         self.assertEqual(evaluator.categorize_maintainability_risk(50), 'High')
     
     def test_evaluate_file_with_errors(self):
-        """Test evaluating a file with errors."""
         analysis = {
             'files': {
                 'test.py': {
@@ -54,7 +49,6 @@ class TestRiskEvaluator(unittest.TestCase):
         self.assertEqual(result['file_risks']['test.py']['risk_level'], 'Unknown')
     
     def test_evaluate_low_risk_file(self):
-        """Test evaluating a low-risk file."""
         analysis = {
             'files': {
                 'good.py': {
@@ -76,7 +70,6 @@ class TestRiskEvaluator(unittest.TestCase):
         self.assertEqual(result['file_risks']['good.py']['risk_level'], 'Low')
     
     def test_defect_prone_identification(self):
-        """Test identification of defect-prone modules."""
         analysis = {
             'files': {
                 'bad.py': {
@@ -100,7 +93,6 @@ class TestRiskEvaluator(unittest.TestCase):
         self.assertEqual(result['defect_prone_modules'][0]['risk_level'], 'High')
 
     def test_large_file_is_flagged_by_loc_threshold(self):
-        """Test very large files (LOC > 500) are explicitly flagged."""
         analysis = {
             'files': {
                 'large_module.py': {

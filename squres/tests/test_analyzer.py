@@ -16,19 +16,15 @@ StaticCodeAnalyzer = analyzer_module.StaticCodeAnalyzer
 
 
 class TestStaticCodeAnalyzer(unittest.TestCase):
-    """Test cases for StaticCodeAnalyzer."""
     
     def setUp(self):
-        """Set up test fixtures."""
         self.test_dir = tempfile.mkdtemp()
     
     def tearDown(self):
-        """Clean up test fixtures."""
         import shutil
         shutil.rmtree(self.test_dir, ignore_errors=True)
     
     def create_test_file(self, name, content):
-        """Create a test Python file."""
         path = os.path.join(self.test_dir, name)
         os.makedirs(os.path.dirname(path), exist_ok=True)
         with open(path, 'w') as f:
@@ -36,7 +32,6 @@ class TestStaticCodeAnalyzer(unittest.TestCase):
         return path
     
     def test_find_python_files(self):
-        """Test finding Python files."""
         self.create_test_file('test.py', 'x = 1')
         self.create_test_file('subdir/test2.py', 'y = 2')
         
@@ -46,12 +41,7 @@ class TestStaticCodeAnalyzer(unittest.TestCase):
         self.assertEqual(len(files), 2)
     
     def test_analyze_simple_file(self):
-        """Test analyzing a simple Python file."""
-        code = """
-def simple_function():
-    return 42
-"""
-        self.create_test_file('simple.py', code)
+        code = self.create_test_file('simple.py', code)
         
         analyzer = StaticCodeAnalyzer(self.test_dir)
         result = analyzer.analyze()
@@ -60,7 +50,6 @@ def simple_function():
         self.assertGreater(result['summary']['analyzed_files'], 0)
     
     def test_analyze_complex_file(self):
-        """Test analyzing a complex Python file."""
         code = """
 def complex_function(x):
     if x > 0:
@@ -87,7 +76,6 @@ def complex_function(x):
                 self.assertGreater(file_analysis['cyclomatic_complexity'], 0)
 
     def test_find_python_files_excludes_virtualenv_directories(self):
-        """Test that virtual environment paths are excluded from discovery."""
         self.create_test_file('src/main.py', 'print("ok")')
         self.create_test_file('venv/lib/ignored.py', 'print("ignore")')
         self.create_test_file('.venv/lib/ignored2.py', 'print("ignore")')
@@ -103,14 +91,12 @@ def complex_function(x):
         self.assertNotIn('env/lib/ignored3.py', relative_files)
 
     def test_analyze_file_handles_missing_file_error(self):
-        """Test read error handling for a missing file."""
         analyzer = StaticCodeAnalyzer(self.test_dir)
         result = analyzer.analyze_file(os.path.join(self.test_dir, 'does_not_exist.py'))
 
         self.assertTrue(any('Failed to read file' in err for err in result['errors']))
 
     def test_maintainability_index_is_within_range(self):
-        """Test MI output stays in expected range for normal analysis."""
         self.create_test_file('maintainability.py', 'def add(a, b):\n    return a + b\n')
 
         analyzer = StaticCodeAnalyzer(self.test_dir)
@@ -121,7 +107,6 @@ def complex_function(x):
         self.assertLessEqual(file_result['maintainability_index'], 100)
 
     def test_maintainability_fallback_on_metric_failure(self):
-        """Test MI fallback when radon maintainability calculation fails."""
         code = 'x = 1\ny = 2\n'
         path = self.create_test_file('mi_fallback.py', code)
 
@@ -134,7 +119,6 @@ def complex_function(x):
         self.assertTrue(any('Maintainability analysis encountered issue' in err for err in result['errors']))
 
     def test_ast_metrics_include_node_and_class_counts(self):
-        """Test AST-derived metrics are populated."""
         code = """
 class Service:
     def run(self):

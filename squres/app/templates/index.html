@@ -531,7 +531,6 @@
         </header>
         
         <div class="content">
-            <!-- Upload Section -->
             <div class="upload-section">
                 <div class="upload-form">
                     <h2>Upload Python Project</h2>
@@ -579,7 +578,6 @@
                 </div>
             </div>
             
-            <!-- Messages -->
             <div class="error" id="errorMsg"></div>
             <div class="success" id="successMsg"></div>
             
@@ -600,17 +598,14 @@
                         </div>
                     </div>
                     
-                    <!-- Summary Cards -->
                     <div class="summary-grid" id="summaryGrid"></div>
                     
-                    <!-- Tabs -->
                     <div class="tabs">
                         <button class="tab-button active" data-tab="files">File Metrics</button>
                         <button class="tab-button" data-tab="risks">Risk Assessment</button>
                         <button class="tab-button" data-tab="defects">Defect-Prone Modules</button>
                     </div>
                     
-                    <!-- File Metrics Tab -->
                     <div id="files" class="tab-content active">
                         <table class="metrics-table">
                             <thead>
@@ -626,7 +621,6 @@
                         </table>
                     </div>
                     
-                    <!-- Risk Assessment Tab -->
                     <div id="risks" class="tab-content">
                         <div style="padding: 20px;">
                             <h3>Risk Distribution</h3>
@@ -640,7 +634,6 @@
                         </div>
                     </div>
                     
-                    <!-- Defect-Prone Modules Tab -->
                     <div id="defects" class="tab-content">
                         <div class="defect-prone-section" id="defectSection"></div>
                     </div>
@@ -728,7 +721,6 @@
             hideMessages();
         }
         
-        // File input handling
         fileInput.addEventListener('change', function() {
             if (this.files.length > 0) {
                 if (!validateSelectedFile(this.files[0])) {
@@ -738,7 +730,6 @@
             }
         });
         
-        // Drag and drop
         const fileLabel = fileInput.parentElement.parentElement.querySelector('.file-input-label');
         fileLabel.addEventListener('dragover', (e) => {
             e.preventDefault();
@@ -770,14 +761,12 @@
             clearAnalysisResults();
         });
         
-        // Clear button
         clearBtn.addEventListener('click', () => {
             clearSelectedFile();
             clearAnalysisResults();
             hideMessages();
         });
         
-        // Form submission
         uploadForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             
@@ -855,7 +844,6 @@
         function displayResults(data) {
             const report = data.report;
             
-            // Display summary
             const summaryGrid = document.getElementById('summaryGrid');
             summaryGrid.innerHTML = `
                 <div class="summary-card highlight">
@@ -893,7 +881,6 @@
                 </div>
             `);
             
-            // Display file metrics
             const fileMetricsBody = document.getElementById('fileMetricsBody');
             fileMetricsBody.innerHTML = report.file_metrics.map(metric => {
                 const riskClass = `risk-${metric.risk_level.toLowerCase()}`;
@@ -908,7 +895,6 @@
                 `;
             }).join('');
             
-            // Display risk assessment
             const riskClassification = report.risk_classification;
             
             const riskDistribution = document.getElementById('riskDistribution');
@@ -952,7 +938,6 @@
                     </div>
                 `).join('') : '<p style="color: #999;">No medium-risk files</p>';
             
-            // Display defect-prone modules
             const defectSection = document.getElementById('defectSection');
             if (report.defect_prone_modules.length > 0) {
                 defectSection.innerHTML = `
@@ -978,7 +963,6 @@
                 defectSection.innerHTML = '<p style="color: #999;">No defect-prone modules detected. Great job!</p>';
             }
             
-            // Setup tabs
             setupTabs();
             
             results.style.display = 'block';
@@ -1022,7 +1006,6 @@
                 const a = document.createElement('a');
                 a.href = url;
                 
-                // Set appropriate filename based on format
                 const timestamp = new Date().toISOString().slice(0, 19).replace(/[-:]/g, '');
                 if (format === 'pdf') {
                     a.download = `sqares_report_${timestamp}.pdf`;

@@ -72,7 +72,6 @@ class ReportGenerator:
         metrics = []
         
         for file_path, analysis in files_data.items():
-            # Skip venv and cache directories
             if 'venv' in file_path or '__pycache__' in file_path or '.pytest_cache' in file_path:
                 continue
             
@@ -86,7 +85,6 @@ class ReportGenerator:
                 'errors': analysis.get('errors', [])
             }
             
-            # Add risk level from risk assessment
             risk_info = self.risk_assessment.get('file_risks', {}).get(file_path, {})
             metric['risk_level'] = risk_info.get('risk_level', 'Unknown')
             metric['risk_reasons'] = risk_info.get('reasons', [])
@@ -135,7 +133,6 @@ class ReportGenerator:
         
         recommendations = []
         
-        # Check average complexity
         avg_complexity = summary.get('average_complexity', 0)
         if avg_complexity > 7:
             recommendations.append({
@@ -146,7 +143,6 @@ class ReportGenerator:
                 'action': 'Refactor complex functions with complexity > 10'
             })
         
-        # Check maintainability
         avg_mi = summary.get('average_maintainability_index', 0)
         if avg_mi < 65:
             recommendations.append({
@@ -165,7 +161,6 @@ class ReportGenerator:
                 'action': 'Add documentation and reduce complexity'
             })
         
-        # Defect-prone modules
         high_risk_count = len([m for m in defect_prone if m['risk_level'] == 'High'])
         if high_risk_count > 0:
             recommendations.append({
@@ -195,7 +190,6 @@ class ReportGenerator:
         lines.append(f"Generated: {report['generated_at']}")
         lines.append("")
         
-        # Project Summary
         lines.append("=" * 80)
         lines.append("PROJECT SUMMARY")
         lines.append("=" * 80)
@@ -210,7 +204,6 @@ class ReportGenerator:
         lines.append(f"Defect-Prone Modules:         {summary['defect_prone_count']}")
         lines.append("")
         
-        # Risk Distribution
         lines.append("Risk Distribution:")
         risk_dist = summary['risk_distribution']
         for risk_level in ['High', 'Medium', 'Low', 'Unknown']:
@@ -218,7 +211,6 @@ class ReportGenerator:
             lines.append(f"  {risk_level:8} Risk: {count} files")
         lines.append("")
         
-        # File Metrics
         lines.append("=" * 80)
         lines.append("FILE METRICS")
         lines.append("=" * 80)
@@ -226,13 +218,10 @@ class ReportGenerator:
         
         file_metrics = report['file_metrics']
         if file_metrics:
-            # Header
             lines.append(f"{'File':<45} {'LOC':>6} {'CC':>6} {'MI':>8} {'Risk':>8}")
             lines.append("-" * 80)
             
-            # Data rows
             for metric in file_metrics[:25]:  # Limit to top 25
-                # Clean up file paths
                 filename = metric['file']
                 if 'venv' in filename:
                     continue  # Skip venv files
@@ -253,7 +242,6 @@ class ReportGenerator:
         
         lines.append("")
         
-        # Defect-Prone Modules
         defect_prone = report['defect_prone_modules']
         if defect_prone:
             lines.append("=" * 80)
@@ -275,7 +263,6 @@ class ReportGenerator:
                         lines.append(f"     • ... and {len(high_func) - 3} more")
                 lines.append("")
         
-        # Recommendations
         recommendations = report['recommendations']
         if recommendations:
             lines.append("=" * 80)
@@ -305,7 +292,6 @@ class ReportGenerator:
         buffer = BytesIO()
         doc = SimpleDocTemplate(buffer, pagesize=letter, topMargin=0.5*inch, bottomMargin=0.5*inch)
         
-        # Get styles
         styles = getSampleStyleSheet()
         title_style = ParagraphStyle(
             'CustomTitle',
@@ -325,14 +311,11 @@ class ReportGenerator:
         )
         normal_style = styles['Normal']
         
-        # Build document content
         content = []
         
-        # Title
         content.append(Paragraph("SQARES - Code Analysis Report", title_style))
         content.append(Spacer(1, 0.2*inch))
         
-        # Summary Section
         report = self.generate_report()
         summary = report['project_summary']
         
@@ -365,20 +348,16 @@ class ReportGenerator:
         content.append(summary_table)
         content.append(Spacer(1, 0.3*inch))
         
-        # File Metrics Section
         content.append(Paragraph("File Metrics", heading_style))
         file_metrics = report['file_metrics']
         if file_metrics:
             metrics_data = [['File', 'LOC', 'CC', 'MI', 'Risk']]
             
-            # Process file metrics, limiting to top 20 most complex files
             for metric in file_metrics[:20]:
-                # Clean up file path
                 file_display = metric['file']
                 if any(x in file_display for x in ['venv', 'site-packages', '__pycache__']):
                     continue  # Skip venv/cache files
                     
-                # Shorten path for display
                 if '/' in file_display:
                     parts = file_display.split('/')
                     file_display = parts[-1]  # Just filename
@@ -397,11 +376,9 @@ class ReportGenerator:
                     metric['risk_level']
                 ])
             
-            if len(metrics_data) > 1:  # Only show table if there's data
-                # Better column widths for improved formatting
+            if len(metrics_data) > 1:  
                 metrics_table = Table(metrics_data, colWidths=[2.0*inch, 0.6*inch, 0.5*inch, 0.5*inch, 0.8*inch])
                 metrics_table.setStyle(TableStyle([
-                    # Header styling
                     ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#1f77b4')),
                     ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
                     ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
@@ -409,21 +386,17 @@ class ReportGenerator:
                     ('ALIGNMENT', (0, 0), (-1, 0), 'CENTER'),
                     ('BOTTOMPADDING', (0, 0), (-1, 0), 10),
                     
-                    # Data rows styling
                     ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
                     ('FONTSIZE', (0, 1), (-1, -1), 9),
                     ('ALIGNMENT', (1, 1), (-1, -1), 'CENTER'),
                     ('ALIGNMENT', (0, 1), (0, -1), 'LEFT'),
                     
-                    # Grid styling
                     ('GRID', (0, 0), (-1, -1), 1, colors.HexColor('#cccccc')),
                     ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.HexColor('#f9f9f9')]),
                     
-                    # Risk level coloring
                     ('TEXTCOLOR', (4, 1), (4, -1), colors.black),
                 ]))
                 
-                # Apply risk level background colors per row
                 for i in range(1, len(metrics_data)):
                     risk = metrics_data[i][-1]
                     if risk == 'High':
@@ -454,7 +427,6 @@ class ReportGenerator:
         
         content.append(Spacer(1, 0.3*inch))
         
-        # Recommendations Section
         recommendations = report['recommendations']
         if recommendations:
             content.append(Paragraph("Recommendations", heading_style))
@@ -466,7 +438,6 @@ class ReportGenerator:
                 content.append(Paragraph(f"{rec['details']}", normal_style))
                 content.append(Spacer(1, 0.1*inch))
         
-        # Footer
         content.append(Spacer(1, 0.2*inch))
         timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         content.append(Paragraph(
@@ -474,8 +445,6 @@ class ReportGenerator:
             ParagraphStyle('Footer', parent=normal_style, fontSize=8, textColor=colors.grey)
         ))
         
-        # Build PDF
         doc.build(content)
         buffer.seek(0)
         return buffer.getvalue()
-

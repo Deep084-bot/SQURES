@@ -8,14 +8,11 @@ import os
 
 class Config:
     """Base configuration."""
-    # Upload settings
     MAX_CONTENT_LENGTH = 500 * 1024 * 1024  # 500 MB
     UPLOAD_FOLDER = '/tmp/squres_uploads'
     
-    # Security
     SECRET_KEY = os.environ.get('SECRET_KEY', 'dev-secret-key-change-in-production')
     
-    # Flask settings
     JSON_SORT_KEYS = False
 
 
@@ -24,9 +21,7 @@ class DevelopmentConfig(Config):
     DEBUG = True
     TESTING = False
 
-
 class TestingConfig(Config):
-    """Testing configuration."""
     DEBUG = False
     TESTING = True
     UPLOAD_FOLDER = '/tmp/squres_test'

@@ -20,21 +20,17 @@ from app.analysis.evaluator import RiskEvaluator
 from app.analysis.report_generator import ReportGenerator
 from app.utils.validators import validate_upload, validate_file_size, validate_zip_contents
 
-# Create blueprints
 api_bp = Blueprint('api', __name__, url_prefix='/api')
 web_bp = Blueprint('web', __name__)
 
 @web_bp.route('/')
 def index():
-    """Display the main upload page."""
     return render_template('index.html')
 
 
 @api_bp.route('/upload', methods=['POST'])
 def upload_file():
-    """
-    Handle file upload and initiate analysis.
-    
+    """    
     Returns:
         JSON response with analysis results or error message
     """
@@ -50,16 +46,13 @@ def upload_file():
         if not is_valid_upload:
             return jsonify({'error': upload_error}), 400
         
-        # Create temporary directory for extraction
         temp_dir = tempfile.mkdtemp(prefix='squres_')
         
         try:
-            # Save uploaded file
             filename = secure_filename(file.filename)
             zip_path = os.path.join(temp_dir, filename)
             file.save(zip_path)
             
-            # Validate saved file size and zip contents
             is_valid_size, size_error = validate_file_size(zip_path, max_file_size)
             if not is_valid_size:
                 return jsonify({'error': size_error}), 400
@@ -68,7 +61,6 @@ def upload_file():
             if not is_valid_zip:
                 return jsonify({'error': zip_error}), 400
             
-            # Extract zip file and gather archive composition details.
             extract_dir = os.path.join(temp_dir, 'extracted')
             os.makedirs(extract_dir, exist_ok=True)
             archive_file_count = 0
@@ -192,7 +184,6 @@ def download_report():
             mimetype = 'text/plain'
             tmp_suffix = '.txt'
         
-        # Create temporary file
         with tempfile.NamedTemporaryFile(delete=False, suffix=tmp_suffix) as tmp:
             if isinstance(content, bytes):
                 tmp.write(content)
@@ -203,7 +194,6 @@ def download_report():
         try:
             return send_file(tmp_path, mimetype=mimetype, as_attachment=True, download_name=filename)
         finally:
-            # Clean up will be handled by the response, but ensure proper deletion
             os.unlink(tmp_path)
     
     except Exception as e:
@@ -212,5 +202,4 @@ def download_report():
 
 @api_bp.route('/health', methods=['GET'])
 def health_check():
-    """Health check endpoint."""
     return jsonify({'status': 'healthy', 'timestamp': datetime.now().isoformat()}), 200
