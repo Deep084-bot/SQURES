@@ -305,8 +305,14 @@
             font-weight: 500;
         }
 
-        .mi-legend {
+        .metrics-guides {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 12px;
             margin: 15px 20px 26px;
+        }
+
+        .mi-legend {
             padding: 12px 14px;
             border-radius: 10px;
             background: #f2f9ff;
@@ -691,7 +697,7 @@
             const highRiskFiles = document.getElementById('highRiskFiles');
             const mediumRiskFiles = document.getElementById('mediumRiskFiles');
             const defectSection = document.getElementById('defectSection');
-            const existingLegend = document.getElementById('miLegend');
+            const existingLegend = document.getElementById('metricsGuides');
 
             summaryGrid.innerHTML = '';
             fileMetricsBody.innerHTML = '';
@@ -870,14 +876,20 @@
                 </div>
             `;
 
-            const existingLegend = document.getElementById('miLegend');
+            const existingLegend = document.getElementById('metricsGuides');
             if (existingLegend) {
                 existingLegend.remove();
             }
             summaryGrid.insertAdjacentHTML('afterend', `
-                <div class="mi-legend" id="miLegend">
-                    <strong>Maintainability Index Guide:</strong>
-                    MI &gt; 85 = Good, 65-85 = Moderate, MI &lt; 65 = Poor
+                <div class="metrics-guides" id="metricsGuides">
+                    <div class="mi-legend" id="miLegend">
+                        <strong>Maintainability Index Guide:</strong>
+                        MI &gt; 85 = Good, 65-85 = Moderate, MI &lt; 65 = Poor
+                    </div>
+                    <div class="mi-legend" id="complexityLegend">
+                        <strong>Cyclomatic Complexity Guide:</strong>
+                        CC 1-6 = Low, 7-9 = Moderate, 10+ = High
+                    </div>
                 </div>
             `);
             
