@@ -226,6 +226,29 @@ Run specific test:
 python -m unittest tests.test_analyzer.TestStaticCodeAnalyzer -v
 ```
 
+## Deploying on Render
+
+This repository is deployment-ready for Render using the included `render.yaml`.
+
+### One-time setup
+
+1. Push this repository to GitHub.
+2. In Render, choose **New +** -> **Blueprint**.
+3. Connect the repository and select this project.
+4. Render will detect `render.yaml` and create the web service automatically.
+
+### Runtime details
+
+- Build command: `pip install -r requirements.txt`
+- Start command: `cd squres && gunicorn wsgi:app --bind 0.0.0.0:$PORT --workers 2 --threads 4 --timeout 120`
+- App entrypoint: `squres/wsgi.py`
+
+### Required environment variables
+
+- `FLASK_ENV=production` (already set in `render.yaml`)
+- `SECRET_KEY` (auto-generated in `render.yaml`)
+- `PYTHON_VERSION=3.11.9` (set in `render.yaml`)
+
 ## Error Handling
 
 The application handles various error scenarios:
